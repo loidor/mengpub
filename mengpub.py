@@ -54,4 +54,4 @@ if __name__ == "__main__":
 
 	shutil.rmtree("OEBPS")
 
-	print ("Done!")
+	print ("\nDone!")

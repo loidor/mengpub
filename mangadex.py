@@ -11,6 +11,7 @@
 import cloudscraper
 import time, os, sys, re, json, html, random
 from PIL import Image
+from urllib3.exceptions import ProtocolError
 
 A_VERSION = "X.X"
 
@@ -166,48 +167,27 @@ def dl(manga_id):
 			dest_filename = pad_filename("{}{}".format(pagenum, ext))
 			outfile = os.path.join(dest_folder, dest_filename)
 
-			verify_check = 0
-
-			while verify_check == 0:
-				r = scraper.get(url)
-				if r.status_code == 200:
+			while True:
+				try:
+					time.sleep(1)
+					r = scraper.get(url)
 					with open(outfile, 'wb') as f:
 						f.write(r.content)
 						# verify downloaded file
 						testpage = Image.open(outfile)
 						try:
 							testpage.verify()
-							verify_check = 1
 						except Exception:
 							print("  File verification failed, trying again...")
 							continue
 						print(" Downloaded page {}.".format(pagenum))
-				else:
-					# silently try again 15 times
-					counter=0
+						break
+				except ProtocolError:
+					print("  "+e)
+					time.sleep(3)
+					continue
 
-					while counter < 15:
-						time.sleep(3)
-						r = scraper.get(url)
-						if r.status_code == 200:
-							with open(outfile, 'wb') as f:
-								f.write(r.content)
-								testpage = Image.open(outfile)
-								try:
-									testpage.verify()
-									verify_check = 1
-								except Exception:
-									print("  **COUGH! COUGH!**")
-									continue
-								print(" Downloaded page {}.".format(pagenum))
-								break
-						else:
-							counter += 1
-							print("  **HICCUP!**")
-							continue
-			time.sleep(1)
-
-	print("Manga downloaded!")
+	print("\nManga downloaded!\n")
 
 if __name__ == "__main__":
 	print("mangadex-dl v{}".format(A_VERSION))
